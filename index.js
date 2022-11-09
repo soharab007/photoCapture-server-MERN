@@ -7,6 +7,7 @@ const port = process.env.PORT || 1000;
 
 
 // middleware
+
 app.use(cors());
 app.use(express.json());
 
@@ -17,6 +18,8 @@ const uri = "mongodb://localhost:27017";
 // console.log(uri);
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+
+// jwt
 function verifyAccess(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -32,11 +35,21 @@ function verifyAccess(req, res, next) {
         next();
     })
 }
+// 
+
+// 
 
 async function run() {
     try {
         const serviceCollection = client.db("photoCapture").collection("services");
         const reviewCollection = client.db("photoCapture").collection("reviews");
+
+        app.post('/jwt', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
+            res.send({ token });
+        });
+
 
         app.get('/home', async (req, res) => {
             const query = {};
@@ -87,7 +100,14 @@ async function run() {
         });
 
         // get your reviews from this api
-        app.get('/myreviews', async (req, res) => {
+        app.get('/myreviews', verifyAccess, async (req, res) => {
+            const decoded = req.decoded;
+
+            console.log(decoded);
+            if (decoded.email !== req.query.email) {
+                return res.status(403).send('unauthorized access');
+            }
+
             let query = {};
             if (req.query.email) {
                 query = { email: req.query.email };
@@ -129,6 +149,9 @@ async function run() {
     }
 }
 run().catch(error => console.log(error));
+// 
+
+// 
 app.get('/', (req, res) => {
     res.send('photoCapture server is running')
 })
