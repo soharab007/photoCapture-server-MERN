@@ -1,9 +1,14 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const jwt = require('jsonwebtoken');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 1000;
+// 
+
+
+
 
 
 // middleware
@@ -15,11 +20,10 @@ app.use(express.json());
 
 // const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.8lhtxek.mongodb.net/?retryWrites=true&w=majority`;
 const uri = "mongodb://localhost:27017";
-// console.log(uri);
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 
-// jwt
+// 
 function verifyAccess(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -35,7 +39,6 @@ function verifyAccess(req, res, next) {
         next();
     })
 }
-// 
 
 // 
 
@@ -43,6 +46,7 @@ async function run() {
     try {
         const serviceCollection = client.db("photoCapture").collection("services");
         const reviewCollection = client.db("photoCapture").collection("reviews");
+
 
         app.post('/jwt', async (req, res) => {
             const user = req.body;
@@ -149,7 +153,6 @@ async function run() {
     }
 }
 run().catch(error => console.log(error));
-// 
 
 // 
 app.get('/', (req, res) => {
